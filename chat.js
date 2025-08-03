@@ -94,7 +94,10 @@ function login() {
 
 function startPeer(username) {
 peer = new Peer(username, {
-  path: "/peerjs"
+  host: location.hostname,
+  port: location.protocol === "https:" ? 443 : 80,
+  path: "/peerjs",
+  secure: location.protocol === "https:"
 });
 
   peer.on("open", id => {
