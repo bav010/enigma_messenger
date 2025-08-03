@@ -93,12 +93,9 @@ function login() {
 }
 
 function startPeer(username) {
-  peer = new Peer(username, {
-    host: "enigma-messenger.onrender.com",
-    port: 443,
-    path: "/peerjs",
-    secure: true
-  });
+peer = new Peer(username, {
+  path: "/peerjs"
+});
 
   peer.on("open", id => {
     myId = id;
