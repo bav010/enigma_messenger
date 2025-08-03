@@ -141,12 +141,12 @@ function startPeer(username, suggestedId) {
   // Определяем настройки в зависимости от окружения
   const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
   
-  const peerConfig = {
-    host: location.hostname,
-    path: "/peerjs",
-    secure: location.protocol === 'https:',
-    debug: 2 // Включаем отладку для диагностики
-  };
+const peer = new Peer(undefined, {
+  host: "enigma-messenger.onrender.com",
+  port: 443,
+  path: "/peerjs",
+  secure: true
+});
 
   // Для локального окружения указываем порт
   if (isLocalhost) {
@@ -490,5 +490,36 @@ copyIdBtn.onclick = () => {
   navigator.clipboard.writeText(myId).then(() => {
     copyIdBtn.textContent = "✅";
     setTimeout(() => copyIdBtn.textContent = "📋", 1000);
+
+
+function saveChatToList(peerId) {
+  let chats = JSON.parse(localStorage.getItem('savedChats') || '[]');
+  if (!chats.includes(peerId)) {
+    chats.push(peerId);
+    localStorage.setItem('savedChats', JSON.stringify(chats));
+    updateChatListUI();
+  }
+}
+
+function updateChatListUI() {
+  const chatItems = document.getElementById("chatListItems");
+  if (!chatItems) return;
+  chatItems.innerHTML = '';
+  const chats = JSON.parse(localStorage.getItem('savedChats') || '[]');
+  chats.forEach(id => {
+    const li = document.createElement('li');
+    const btn = document.createElement('button');
+    btn.textContent = id;
+    btn.onclick = () => {
+      connectToEl.value = id;
+      connectToPeer();
+    };
+    li.appendChild(btn);
+    chatItems.appendChild(li);
+  });
+}
+
+document.getElementById("chatList").style.display = "block";
+updateChatListUI();
   });
 };
