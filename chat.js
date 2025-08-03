@@ -122,9 +122,9 @@ async function login() {
 function startPeer(username, suggestedId) {
   peer = new Peer(suggestedId || undefined, {
     host: location.hostname,
-    port: location.protocol === "https:" ? 443 : 80,
+    port: 443,
     path: "/peerjs",
-    secure: location.protocol === "https:"
+    secure: true
   });
 
   peer.on("open", async id => {
@@ -158,11 +158,17 @@ function startPeer(username, suggestedId) {
     setupConnection(conn);
   });
 
+  peer.on("disconnected", () => {
+    console.warn("⚠️ PeerJS: disconnected");
+    connectionStatus.textContent = "⚠️ Потеряно соединение с сервером PeerJS";
+  });
+
   peer.on("error", err => {
-    console.error(err);
+    console.error("PeerJS error:", err);
     alert("Ошибка PeerJS: " + (err.message || "Неизвестная ошибка"));
   });
 }
+
 
 
 function connectToPeer() {
