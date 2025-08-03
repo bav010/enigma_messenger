@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const http = require('http');
+const path = require("path"); // Оставляем только здесь!
 
 const app = express();
 const server = http.createServer(app);
@@ -15,6 +16,7 @@ const peerServer = ExpressPeerServer(server, {
 app.use(cors());
 app.use(bodyParser.json());
 app.use('/peerjs', peerServer);
+app.use(express.static(path.join(__dirname))); // Отдаём фронтенд
 
 // In-memory storage
 let users = [];
@@ -46,17 +48,12 @@ app.post('/updatePeerId', (req, res) => {
   res.json({ message: 'Peer ID обновлён' });
 });
 
-const path = require("path");
-
+// Загружаем index.html по умолчанию
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
-// Start server
+
 const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
   console.log(`🚀 Сервер запущен на порту ${PORT}`);
 });
-const path = require('path');
-app.use(express.static(path.join(__dirname)));
-const path = require("path");
-app.use(express.static(path.join(__dirname)));
