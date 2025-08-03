@@ -60,14 +60,32 @@ function deleteChat(peerId) {
 }
 
 function log(message, outgoing = false, peerId = currentPeer) {
+  if (!peerId) {
+    console.error("Попытка логирования без peerId");
+    return;
+  }
+  
   const prefix = outgoing ? '>> ' : '<< ';
   const formatted = `${prefix}${message}\n`;
-  if (!messageHistory.has(peerId)) messageHistory.set(peerId, []);
+  
+  console.log(`Логируем сообщение для ${peerId}: ${formatted.trim()}`);
+  
+  if (!messageHistory.has(peerId)) {
+    messageHistory.set(peerId, []);
+    console.log(`Создана новая история для ${peerId}`);
+  }
+  
   messageHistory.get(peerId).push(formatted);
+  
+  // Обновляем отображение только если это текущий чат
   if (peerId === currentPeer) {
     chatLog.value += formatted;
     chatLog.scrollTop = chatLog.scrollHeight;
+    console.log(`Обновлен интерфейс чата для ${peerId}`);
+  } else {
+    console.log(`Сообщение сохранено для ${peerId}, но не отображено (текущий чат: ${currentPeer})`);
   }
+  
   saveHistoryToStorage();
 }
 
@@ -223,14 +241,23 @@ function setupConnection(conn) {
   const peerId = conn.peer;
 
   conn.on("open", () => {
+    console.log(`Соединение открыто с ${peerId}`);
     connections.set(peerId, conn);
     addToChatList(peerId);
-    switchChat(peerId);
+    
+    // Автоматически переключиться на новый чат только если это исходящее соединение
+    // или если у нас нет активного чата
+    if (!currentPeer) {
+      switchChat(peerId);
+    }
+    
     log("🔗 Соединено с " + peerId, false, peerId);
     conn.send({ type: "version", version: CLIENT_VERSION });
   });
 
   conn.on("data", async data => {
+    console.log(`Получены данные от ${peerId}:`, data);
+    
     if (typeof data === "object" && data.type === "version") {
       if (data.version !== CLIENT_VERSION) {
         log(`⚠️ У собеседника версия ${data.version}`, false, peerId);
@@ -238,18 +265,37 @@ function setupConnection(conn) {
       return;
     }
 
+    // Расшифровка если включено шифрование
+    let message = data;
     if (cipherSelect.value === "aes" && sharedKey) {
       try {
-        data = await decryptMessage(data);
+        message = await decryptMessage(data);
       } catch (e) {
-        log("Ошибка расшифровки", false, peerId);
+        console.error("Ошибка расшифровки:", e);
+        log("❌ Ошибка расшифровки", false, peerId);
         return;
       }
     }
-    log(data, false, peerId);
+    
+    // Логируем сообщение
+    log(message, false, peerId);
+    
+    // Если сообщение не от текущего активного собеседника, показать уведомление
+    if (currentPeer !== peerId) {
+      // Можно добавить звуковое уведомление или визуальный индикатор
+      console.log(`Новое сообщение от ${peerId}: ${message}`);
+      
+      // Добавить визуальный индикатор непрочитанного сообщения
+      const chatItem = [...chatListItems.children].find(li => li.dataset.peerId === peerId);
+      if (chatItem) {
+        chatItem.style.fontWeight = 'bold';
+        chatItem.style.backgroundColor = '#e3f2fd';
+      }
+    }
   });
 
   conn.on("close", () => {
+    console.log(`Соединение закрыто с ${peerId}`);
     connections.delete(peerId);
     if (currentPeer === peerId) {
       log("🔌 Чат закрылся: " + peerId, false, peerId);
@@ -258,18 +304,34 @@ function setupConnection(conn) {
       sendBtn.disabled = true;
     }
   });
+
+  conn.on("error", (err) => {
+    console.error(`Ошибка соединения с ${peerId}:`, err);
+  });
 }
 
 function switchChat(peerId) {
   if (!connections.has(peerId) && !messageHistory.has(peerId)) return;
+  
   currentPeer = peerId;
   connectionStatus.textContent = "💬 Общение с " + peerId;
   msgInput.disabled = false;
   sendBtn.disabled = false;
+  
+  // Очистить визуальные индикаторы непрочитанных сообщений
+  const chatItem = [...chatListItems.children].find(li => li.dataset.peerId === peerId);
+  if (chatItem) {
+    chatItem.style.fontWeight = 'normal';
+    chatItem.style.backgroundColor = 'transparent';
+  }
+  
+  // Загрузить историю чата
   chatLog.value = "";
   const history = messageHistory.get(peerId) || [];
   chatLog.value = history.join("");
   chatLog.scrollTop = chatLog.scrollHeight;
+  
+  console.log(`Переключился на чат с ${peerId}, история: ${history.length} сообщений`);
 }
 
 function sendMsg() {
@@ -277,13 +339,26 @@ function sendMsg() {
   if (!msg || !currentPeer) return;
 
   const conn = connections.get(currentPeer);
-  if (!conn?.open) return;
+  if (!conn?.open) {
+    alert("Соединение с собеседником потеряно");
+    return;
+  }
+
+  console.log(`Отправляем сообщение "${msg}" для ${currentPeer}`);
 
   if (cipherSelect.value === "aes" && sharedKey) {
-    encryptMessage(msg).then(enc => conn.send(enc));
+    encryptMessage(msg).then(enc => {
+      conn.send(enc);
+      console.log("Зашифрованное сообщение отправлено");
+    }).catch(err => {
+      console.error("Ошибка шифрования:", err);
+      alert("Ошибка при шифровании сообщения");
+    });
   } else {
     conn.send(msg);
+    console.log("Незашифрованное сообщение отправлено");
   }
+  
   log(msg, true);
   msgInput.value = "";
 }
