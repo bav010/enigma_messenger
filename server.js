@@ -1,15 +1,23 @@
 const express = require('express');
+const { ExpressPeerServer } = require('peer');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const http = require('http');
 
 const app = express();
-const port = 4000;
+const server = http.createServer(app);
+const peerServer = ExpressPeerServer(server, {
+  path: '/peerjs'
+});
 
+// Middleware
 app.use(cors());
 app.use(bodyParser.json());
+app.use('/peerjs', peerServer);
 
-let users = []; // Здесь будем хранить пользователей (в памяти)
+// In-memory storage
+let users = [];
 
 app.post('/register', async (req, res) => {
   const { username, password, peerId } = req.body;
@@ -38,6 +46,13 @@ app.post('/updatePeerId', (req, res) => {
   res.json({ message: 'Peer ID обновлён' });
 });
 
-app.listen(4000, '0.0.0.0', () => {
-  console.log('Auth-сервер запущен на http://localhost:4000');
+// Test route
+app.get("/", (req, res) => {
+  res.send("✅ Сервер работает и PeerJS тоже!");
+});
+
+// Start server
+const PORT = process.env.PORT || 4000;
+server.listen(PORT, () => {
+  console.log(`🚀 Сервер запущен на порту ${PORT}`);
 });

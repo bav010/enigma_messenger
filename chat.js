@@ -1,6 +1,6 @@
 // chat.js (мультичат с локальной историей и восстановлением из localStorage)
 
-const CLIENT_VERSION = "1.0.0";
+const CLIENT_VERSION = "1.0.1";
 
 let peer;
 let myId = null;
@@ -95,7 +95,12 @@ function login() {
 }
 
 function startPeer(username) {
-  peer = new Peer(username);
+  peer = new Peer(username, {
+    host: "enigma-messenger.onrender.com",
+    port: 443,
+    path: "/peerjs",
+    secure: true
+  });   
 
   peer.on("open", id => {
     myId = id;
