@@ -1,6 +1,4 @@
-// chat.js (мультичат с локальной историей и восстановлением из localStorage)
-
-const CLIENT_VERSION = "1.0.2";
+const CLIENT_VERSION = "1.0.3";
 
 let peer;
 let myId = null;
@@ -94,12 +92,13 @@ function login() {
   }
 }
 
-peer = new Peer(username, {
-  host: "enigma-messenger.onrender.com",
-  port: 443,
-  path: "/peerjs",
-  secure: true
-});
+function startPeer(username) {
+  peer = new Peer(username, {
+    host: "enigma-messenger.onrender.com",
+    port: 443,
+    path: "/peerjs",
+    secure: true
+  });
 
   peer.on("open", id => {
     myId = id;
@@ -109,13 +108,12 @@ peer = new Peer(username, {
     connectionStatus.textContent = "✅ Готов к подключению...";
     loadHistoryFromStorage();
 
-    // Проверка версии сервера (пример: можно добавить fetch к version.json)
-   fetch("version.json").then(r => r.json()).then(({ version }) => {
-  if (version !== CLIENT_VERSION) {
-    alert(`Доступна новая версия чата: ${version}`);
-    location.reload(); // Перезагрузка страницы
-  }
-}).catch(() => {});
+    fetch("version.json").then(r => r.json()).then(({ version }) => {
+      if (version !== CLIENT_VERSION) {
+        alert(`Доступна новая версия чата: ${version}`);
+        location.reload();
+      }
+    }).catch(() => {});
   });
 
   peer.on("connection", conn => {
@@ -127,7 +125,7 @@ peer = new Peer(username, {
     console.error(err);
     alert("Ошибка PeerJS: " + err.message);
   });
-
+}
 
 function connectToPeer() {
   const peerId = connectToEl.value.trim();
@@ -146,8 +144,6 @@ function setupConnection(conn) {
     addToChatList(peerId);
     switchChat(peerId);
     log("🔗 Соединено с " + peerId, false, peerId);
-
-    // Отправка своей версии
     conn.send({ type: "version", version: CLIENT_VERSION });
   });
 
@@ -272,7 +268,6 @@ function addToChatList(peerId) {
 
   delBtn.onmouseenter = () => delBtn.style.color = "#d00";
   delBtn.onmouseleave = () => delBtn.style.color = "#999";
-
   delBtn.onclick = (e) => {
     e.stopPropagation();
     deleteChat(peerId);
