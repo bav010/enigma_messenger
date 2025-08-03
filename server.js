@@ -9,13 +9,12 @@ const path = require("path"); // Оставляем только здесь!
 const app = express();
 const server = http.createServer(app);
 const peerServer = ExpressPeerServer(server, {
-  path: '/peerjs'
+  path: '/'
 });
-
+app.use('/', peerServer);
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
-app.use('/peerjs', peerServer);
 app.use(express.static(path.join(__dirname))); // Отдаём фронтенд
 
 // In-memory storage

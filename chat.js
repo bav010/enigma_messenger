@@ -55,7 +55,7 @@ function deleteChat(peerId) {
     chatLog.value = "";
     msgInput.disabled = true;
     sendBtn.disabled = true;
-    connectionStatus.textContent = "📭 Чат удалён";
+    connectionStatus.textContent = "\ud83d\udceb \u0427\u0430\u0442 \u0443\u0434\u0430\u043b\u0451\u043d";
   }
 }
 
@@ -71,42 +71,79 @@ function log(message, outgoing = false, peerId = currentPeer) {
   saveHistoryToStorage();
 }
 
-function register() {
+async function register() {
   const username = usernameEl.value.trim();
   const password = passwordEl.value.trim();
   if (!username || !password) {
     authStatusEl.textContent = "Введите логин и пароль";
     return;
   }
-  localStorage.setItem("user-" + username, password);
-  authStatusEl.textContent = "✅ Регистрация успешна. Теперь войдите.";
-}
 
-function login() {
-  const username = usernameEl.value.trim();
-  const password = passwordEl.value.trim();
-  if (localStorage.getItem("user-" + username) === password) {
-    startPeer(username);
-  } else {
-    authStatusEl.textContent = "❌ Неверный логин или пароль";
+  try {
+    const res = await fetch("/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+    authStatusEl.textContent = "✅ Регистрация успешна. Теперь войдите.";
+  } catch (e) {
+    authStatusEl.textContent = "❌ " + e.message;
   }
 }
 
-function startPeer(username) {
-peer = new Peer(username, {
+async function login() {
+  const username = usernameEl.value.trim();
+  const password = passwordEl.value.trim();
+
+  if (!username || !password) {
+    authStatusEl.textContent = "Введите логин и пароль";
+    return;
+  }
+
+  try {
+    const res = await fetch("/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+
+    startPeer(username, data.peerId);
+  } catch (e) {
+    authStatusEl.textContent = "❌ " + e.message;
+  }
+}
+
+function startPeer(username, suggestedId) {
+peer = new Peer(suggestedId || undefined, {
   host: location.hostname,
   port: location.protocol === "https:" ? 443 : 80,
-  path: "/peerjs",
+  path: "/", // важно: путь изменён
   secure: location.protocol === "https:"
 });
 
-  peer.on("open", id => {
+  peer.on("open", async id => {
     myId = id;
     myIdEl.textContent = id;
     authContainer.style.display = "none";
     chatContainer.style.display = "flex";
     connectionStatus.textContent = "✅ Готов к подключению...";
     loadHistoryFromStorage();
+
+    try {
+      await fetch("/updatePeerId", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, peerId: id })
+      });
+    } catch (e) {
+      console.error("Не удалось обновить peerId на сервере", e);
+    }
 
     fetch("version.json").then(r => r.json()).then(({ version }) => {
       if (version !== CLIENT_VERSION) {
@@ -126,6 +163,7 @@ peer = new Peer(username, {
     alert("Ошибка PeerJS: " + err.message);
   });
 }
+
 
 function connectToPeer() {
   const peerId = connectToEl.value.trim();
