@@ -8,9 +8,8 @@ const path = require("path"); // Оставляем только здесь!
 
 const app = express();
 const server = http.createServer(app);
-const peerServer = ExpressPeerServer(server, {
-  path: '/'
-});
+const peerServer = ExpressPeerServer(server, { path: '/peerjs' });
+app.use('/peerjs', peerServer);
 app.use('/', peerServer);
 // Middleware
 app.use(cors());

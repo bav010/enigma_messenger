@@ -123,7 +123,7 @@ function startPeer(username, suggestedId) {
   peer = new Peer(suggestedId || undefined, {
     host: "enigma-messenger.onrender.com",
     port: 443,
-    path: "/",
+    path: "/peerjs",
     secure: true
   });
 
