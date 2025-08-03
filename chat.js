@@ -186,8 +186,13 @@ function startPeer(username, suggestedId) {
   });
 
   peer.on("connection", conn => {
+    console.log(`Входящее соединение от ${conn.peer}`);
     if (conn.peer === myId) return;
-    setupConnection(conn);
+    
+    conn.on("open", () => {
+      console.log(`Входящее соединение открыто от ${conn.peer}`);
+      setupConnection(conn);
+    });
   });
 
   peer.on("disconnected", () => {
@@ -225,10 +230,12 @@ function connectToPeer() {
   if (!peerId || peerId === myId) return alert("Невозможно подключиться к себе");
   if (connections.has(peerId)) return switchChat(peerId);
 
+  console.log(`Попытка подключения к ${peerId}`);
   const conn = peer.connect(peerId);
 
   conn.on("open", () => {
-    setupConnection(conn); // только после успешного соединения
+    console.log(`Исходящее соединение открыто с ${peerId}`);
+    setupConnection(conn);
   });
 
   conn.on("error", err => {
@@ -446,6 +453,13 @@ function addToChatList(peerId) {
 function clearChatList() {
   chatListItems.innerHTML = "";
 }
+
+// Добавляем обработчик для Enter в поле сообщения
+msgInput.addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') {
+    sendMsg();
+  }
+});
 
 copyIdBtn.onclick = () => {
   navigator.clipboard.writeText(myId).then(() => {
