@@ -189,10 +189,8 @@ function startPeer(username, suggestedId) {
     console.log(`Входящее соединение от ${conn.peer}`);
     if (conn.peer === myId) return;
     
-    conn.on("open", () => {
-      console.log(`Входящее соединение открыто от ${conn.peer}`);
-      setupConnection(conn);
-    });
+    // Сразу настраиваем соединение
+    setupConnection(conn);
   });
 
   peer.on("disconnected", () => {
@@ -246,15 +244,18 @@ function connectToPeer() {
 
 function setupConnection(conn) {
   const peerId = conn.peer;
+  console.log(`Настройка соединения с ${peerId}`);
+
+  // Сразу добавляем в соединения и список
+  connections.set(peerId, conn);
+  addToChatList(peerId);
+  
+  // ПРИНУДИТЕЛЬНО переключаемся на этот чат
+  switchChat(peerId);
+  console.log(`Переключились на чат с ${peerId}, currentPeer теперь: ${currentPeer}`);
 
   conn.on("open", () => {
     console.log(`Соединение открыто с ${peerId}`);
-    connections.set(peerId, conn);
-    addToChatList(peerId);
-    
-    // ВСЕГДА переключаемся на новый чат при установке соединения
-    switchChat(peerId);
-    
     log("🔗 Соединено с " + peerId, false, peerId);
     conn.send({ type: "version", version: CLIENT_VERSION });
   });
@@ -281,20 +282,17 @@ function setupConnection(conn) {
       }
     }
     
-    // Если нет активного чата, автоматически переключиться на отправителя
-    if (!currentPeer) {
-      console.log(`Автоматически переключаемся на чат с ${peerId}`);
+    // ПРИНУДИТЕЛЬНО переключаемся на отправителя если чат не активен
+    if (currentPeer !== peerId) {
+      console.log(`Переключаемся на чат с ${peerId} из-за нового сообщения`);
       switchChat(peerId);
     }
     
     // Логируем сообщение
     log(message, false, peerId);
     
-    // Если сообщение не от текущего активного собеседника, показать уведомление
+    // Добавить визуальный индикатор непрочитанного сообщения для других чатов
     if (currentPeer !== peerId) {
-      console.log(`Новое сообщение от ${peerId}: ${message}`);
-      
-      // Добавить визуальный индикатор непрочитанного сообщения
       const chatItem = [...chatListItems.children].find(li => li.dataset.peerId === peerId);
       if (chatItem) {
         chatItem.style.fontWeight = 'bold';
