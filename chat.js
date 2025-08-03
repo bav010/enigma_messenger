@@ -120,14 +120,28 @@ async function login() {
 }
 
 function startPeer(username, suggestedId) {
-  peer = new Peer(suggestedId || undefined, {
+  // Определяем настройки в зависимости от окружения
+  const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  
+  const peerConfig = {
     host: location.hostname,
-    port: 443,
-   path: "peerjs",
-    secure: true
-  });
+    path: "/peerjs",
+    secure: location.protocol === 'https:',
+    debug: 2 // Включаем отладку для диагностики
+  };
+
+  // Для локального окружения указываем порт
+  if (isLocalhost) {
+    peerConfig.port = location.port || (location.protocol === 'https:' ? 443 : 80);
+  }
+  // Для продакшена (Render) порт не указываем - будет использоваться стандартный
+
+  console.log('PeerJS config:', peerConfig);
+
+  peer = new Peer(suggestedId || undefined, peerConfig);
 
   peer.on("open", async id => {
+    console.log('PeerJS connected with ID:', id);
     myId = id;
     myIdEl.textContent = id;
     authContainer.style.display = "none";
@@ -161,15 +175,32 @@ function startPeer(username, suggestedId) {
   peer.on("disconnected", () => {
     console.warn("⚠️ PeerJS: disconnected");
     connectionStatus.textContent = "⚠️ Потеряно соединение с сервером PeerJS";
+    
+    // Попытка переподключения через 3 секунды
+    setTimeout(() => {
+      if (peer.disconnected) {
+        console.log("Попытка переподключения...");
+        peer.reconnect();
+      }
+    }, 3000);
   });
 
   peer.on("error", err => {
     console.error("PeerJS error:", err);
-    alert("Ошибка PeerJS: " + (err.message || "Неизвестная ошибка"));
+    let errorMessage = "Неизвестная ошибка";
+    
+    if (err.type === 'network') {
+      errorMessage = "Ошибка сети. Проверьте подключение к интернету";
+    } else if (err.type === 'peer-unavailable') {
+      errorMessage = "Собеседник недоступен";
+    } else if (err.type === 'server-error') {
+      errorMessage = "Ошибка сервера PeerJS";
+    }
+    
+    alert("Ошибка PeerJS: " + errorMessage);
+    connectionStatus.textContent = "❌ " + errorMessage;
   });
 }
-
-
 
 function connectToPeer() {
   const peerId = connectToEl.value.trim();
