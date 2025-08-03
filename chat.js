@@ -454,12 +454,39 @@ function clearChatList() {
   chatListItems.innerHTML = "";
 }
 
+function refreshChat() {
+  console.log("Принудительное обновление интерфейса");
+  console.log("Текущий пир:", currentPeer);
+  console.log("Подключения:", Array.from(connections.keys()));
+  console.log("История сообщений:", Array.from(messageHistory.keys()));
+  
+  if (currentPeer && messageHistory.has(currentPeer)) {
+    const history = messageHistory.get(currentPeer);
+    chatLog.value = history.join("");
+    chatLog.scrollTop = chatLog.scrollHeight;
+    console.log(`Обновлен чат для ${currentPeer}, сообщений: ${history.length}`);
+  }
+}
+
+function debugChat() {
+  console.log("=== DEBUG INFO ===");
+  console.log("myId:", myId);
+  console.log("currentPeer:", currentPeer);
+  console.log("connections:", connections);
+  console.log("messageHistory:", messageHistory);
+  console.log("==================");
+}
+
 // Добавляем обработчик для Enter в поле сообщения
 msgInput.addEventListener('keypress', function(e) {
   if (e.key === 'Enter') {
     sendMsg();
   }
 });
+
+// Добавляем глобальные функции для отладки
+window.refreshChat = refreshChat;
+window.debugChat = debugChat;
 
 copyIdBtn.onclick = () => {
   navigator.clipboard.writeText(myId).then(() => {
