@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>PeerJS Chat</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f2f5;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+    .container {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+      width: 400px;
+      padding: 20px 30px;
+    }
+    h2, h3 {
+      margin: 0 0 20px;
+      text-align: center;
+      color: #333;
+      user-select: none;
+    }
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: #555;
+      user-select: none;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 8px 12px;
+      margin-bottom: 15px;
+      border: 1.8px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.3s ease;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #4a90e2;
+      outline: none;
+    }
+    textarea {
+      resize: none;
+      height: 150px;
+      font-family: monospace;
+      background: #f9f9f9;
+      color: #222;
+    }
+    button {
+      background-color: #4a90e2;
+      color: white;
+      font-weight: 600;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 15px;
+      cursor: pointer;
+      font-size: 15px;
+      width: 100%;
+      margin-bottom: 10px;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #357ABD;
+    }
+    #keyStatus {
+      font-style: italic;
+      color: #888;
+      margin-bottom: 15px;
+      user-select: none;
+    }
+    #my-id {
+      font-weight: 700;
+      color: #4a90e2;
+    }
+    #chatContainer {
+      display: none;
+      width: 100%;
+      max-width: 900px;
+      flex-direction: row;
+      gap: 20px;
+    }
+    #chatList {
+      width: 200px;
+      border-right: 1px solid #ccc;
+      padding-right: 10px;
+      overflow-y: auto;
+      max-height: 500px;
+    }
+  </style>
+</head>
+<body>
+  <div id="authContainer" class="container">
+    <h2>Вход / Регистрация</h2>
+    <input id="username" type="text" placeholder="Логин" />
+    <input id="password" type="password" placeholder="Пароль" />
+    <button onclick="register()">🔐 Зарегистрироваться</button>
+    <button onclick="login()">➡️ Войти</button>
+    <div id="authStatus" style="margin-top:10px; color:gray;"></div>
+  </div>
+
+  <div id="chatContainer" class="container">
+    <div id="chatList">
+      <h3>Чаты</h3>
+      <ul id="chatListItems" style="list-style:none; padding-left:0; margin:0;"></ul>
+      <button onclick="clearChatList()">Очистить список</button>
+    </div>
+
+    <div style="flex-grow: 1;">
+      <h2>
+        Ваш Peer ID: <span id="my-id">ожидание...</span>
+        <button id="copyIdBtn" title="Скопировать ID" style="margin-left:8px; cursor:pointer;">📋</button>
+      </h2>
+      <div id="connectionStatus" style="margin-bottom: 15px; font-style: italic; color: #999;">🔄 Ожидание соединения...</div>
+
+      <label for="connectTo">ID собеседника</label>
+      <input id="connectTo" type="text" placeholder="Введите ID собеседника" />
+      <button onclick="connectToPeer()">🔗 Подключиться</button>
+
+      <label for="cipherSelect">Выберите шифр</label>
+      <select id="cipherSelect">
+        <option value="none">Без шифрования</option>
+        <option value="aes">AES-GCM (128 бит)</option>
+      </select>
+
+      <label for="keyInput">Введите пароль для AES-ключа</label>
+      <input id="keyInput" type="password" placeholder="Пароль" />
+      <button onclick="deriveKey()">Создать AES-ключ из пароля</button>
+      <div id="keyStatus">Ключ не установлен</div>
+
+      <label for="chatLog">Чат</label>
+      <textarea id="chatLog" readonly></textarea>
+      <input id="msgInput" type="text" placeholder="Сообщение" disabled />
+      <button onclick="sendMsg()" disabled>📨 Отправить</button>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <script src="./chat.js"></script> 
+</body>
+</html>
