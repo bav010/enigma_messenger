@@ -141,12 +141,12 @@ function startPeer(username, suggestedId) {
   // Определяем настройки в зависимости от окружения
   const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
   
-const peer = new Peer(undefined, {
-  host: "enigma-messenger.onrender.com",
-  port: 443,
-  path: "/peerjs",
-  secure: true
-});
+  const peerConfig = {
+    host: location.hostname,
+    path: "/peerjs",
+    secure: location.protocol === 'https:',
+    debug: 2 // Включаем отладку для диагностики
+  };
 
   // Для локального окружения указываем порт
   if (isLocalhost) {
