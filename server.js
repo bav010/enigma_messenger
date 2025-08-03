@@ -46,15 +46,17 @@ app.post('/updatePeerId', (req, res) => {
   res.json({ message: 'Peer ID обновлён' });
 });
 
-// Test route
-app.get("/", (req, res) => {
-  res.send("✅ Сервер работает и PeerJS тоже!");
-});
+const path = require("path");
 
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
 // Start server
 const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
   console.log(`🚀 Сервер запущен на порту ${PORT}`);
 });
 const path = require('path');
+app.use(express.static(path.join(__dirname)));
+const path = require("path");
 app.use(express.static(path.join(__dirname)));
