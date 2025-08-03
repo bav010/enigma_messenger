@@ -171,7 +171,15 @@ function connectToPeer() {
   if (connections.has(peerId)) return switchChat(peerId);
 
   const conn = peer.connect(peerId);
-  setupConnection(conn);
+
+  conn.on("open", () => {
+    setupConnection(conn); // только после успешного соединения
+  });
+
+  conn.on("error", err => {
+    console.error("Ошибка соединения:", err);
+    alert("Ошибка подключения к " + peerId);
+  });
 }
 
 function setupConnection(conn) {
