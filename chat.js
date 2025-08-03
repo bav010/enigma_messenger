@@ -123,7 +123,7 @@ function startPeer(username, suggestedId) {
   peer = new Peer(suggestedId || undefined, {
     host: location.hostname,
     port: 443,
-    path: "/peerjs",
+   path: "peerjs",
     secure: true
   });
 
