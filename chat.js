@@ -55,7 +55,7 @@ function deleteChat(peerId) {
     chatLog.value = "";
     msgInput.disabled = true;
     sendBtn.disabled = true;
-    connectionStatus.textContent = "\ud83d\udceb \u0427\u0430\u0442 \u0443\u0434\u0430\u043b\u0451\u043d";
+    connectionStatus.textContent = "📭 Чат удалён";
   }
 }
 
@@ -120,12 +120,12 @@ async function login() {
 }
 
 function startPeer(username, suggestedId) {
-peer = new Peer(suggestedId || undefined, {
-  host: location.hostname,
-  port: location.protocol === "https:" ? 443 : 80,
-  path: "/", // важно: путь изменён
-  secure: location.protocol === "https:"
-});
+  peer = new Peer(suggestedId || undefined, {
+    host: "enigma-messenger.onrender.com",
+    port: 443,
+    path: "/",
+    secure: true
+  });
 
   peer.on("open", async id => {
     myId = id;
