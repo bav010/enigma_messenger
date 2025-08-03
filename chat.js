@@ -121,10 +121,10 @@ async function login() {
 
 function startPeer(username, suggestedId) {
   peer = new Peer(suggestedId || undefined, {
-    host: "enigma-messenger.onrender.com",
-    port: 443,
+    host: location.hostname,
+    port: location.protocol === "https:" ? 443 : 80,
     path: "/peerjs",
-    secure: true
+    secure: location.protocol === "https:"
   });
 
   peer.on("open", async id => {
@@ -160,7 +160,7 @@ function startPeer(username, suggestedId) {
 
   peer.on("error", err => {
     console.error(err);
-    alert("Ошибка PeerJS: " + err.message);
+    alert("Ошибка PeerJS: " + (err.message || "Неизвестная ошибка"));
   });
 }
 
