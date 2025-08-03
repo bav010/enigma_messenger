@@ -56,3 +56,5 @@ const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
   console.log(`🚀 Сервер запущен на порту ${PORT}`);
 });
+const path = require('path');
+app.use(express.static(path.join(__dirname)));
