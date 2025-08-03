@@ -245,11 +245,8 @@ function setupConnection(conn) {
     connections.set(peerId, conn);
     addToChatList(peerId);
     
-    // Автоматически переключиться на новый чат только если это исходящее соединение
-    // или если у нас нет активного чата
-    if (!currentPeer) {
-      switchChat(peerId);
-    }
+    // ВСЕГДА переключаемся на новый чат при установке соединения
+    switchChat(peerId);
     
     log("🔗 Соединено с " + peerId, false, peerId);
     conn.send({ type: "version", version: CLIENT_VERSION });
@@ -277,12 +274,17 @@ function setupConnection(conn) {
       }
     }
     
+    // Если нет активного чата, автоматически переключиться на отправителя
+    if (!currentPeer) {
+      console.log(`Автоматически переключаемся на чат с ${peerId}`);
+      switchChat(peerId);
+    }
+    
     // Логируем сообщение
     log(message, false, peerId);
     
     // Если сообщение не от текущего активного собеседника, показать уведомление
     if (currentPeer !== peerId) {
-      // Можно добавить звуковое уведомление или визуальный индикатор
       console.log(`Новое сообщение от ${peerId}: ${message}`);
       
       // Добавить визуальный индикатор непрочитанного сообщения
@@ -408,7 +410,10 @@ function addToChatList(peerId) {
   const nameSpan = document.createElement("span");
   nameSpan.textContent = peerId;
   nameSpan.style.cursor = "pointer";
-  nameSpan.onclick = () => switchChat(peerId);
+  nameSpan.onclick = () => {
+    console.log(`Переключение на чат с ${peerId} по клику`);
+    switchChat(peerId);
+  };
 
   const delBtn = document.createElement("button");
   delBtn.innerHTML = "&times;";
@@ -434,6 +439,8 @@ function addToChatList(peerId) {
   li.appendChild(nameSpan);
   li.appendChild(delBtn);
   chatListItems.appendChild(li);
+  
+  console.log(`Добавлен в список чатов: ${peerId}`);
 }
 
 function clearChatList() {
